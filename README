@@ -1,0 +1,3 @@
+This plugin allows bulding projects using the sbt tool.
+
+sbt (http://code.google.com/p/simple-build-tool/) is a simple build tool for Scala projects that aims to do the basics well.
