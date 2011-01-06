@@ -175,6 +175,10 @@ public class SbtPluginBuilder extends Builder {
 
 		private String sbtJarPath;
 
+		public DescriptorImpl() {
+			load();
+		}
+
 		/**
 		 * Performs on-the-fly validation of the form field 'name'.
 		 * 
