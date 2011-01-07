@@ -13,7 +13,7 @@
   	<f:textbox default="-Dsbt.log.noformat=true"/>
   </f:entry>
 
-  <f:entry title="Targets" field="targets">
+  <f:entry title="Actions" field="actions">
   	<f:textbox/>
   </f:entry>
   

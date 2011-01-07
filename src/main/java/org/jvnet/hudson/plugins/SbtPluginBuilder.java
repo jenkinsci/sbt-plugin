@@ -45,17 +45,17 @@ import org.kohsuke.stapler.StaplerRequest;
  */
 public class SbtPluginBuilder extends Builder {
 
-	private final String targets;
+	private final String actions;
 	private final String jvmFlags;
 	private final String sbtFlags;
 
 	// Fields in config.jelly must match the parameter names in the
 	// "DataBoundConstructor"
 	@DataBoundConstructor
-	public SbtPluginBuilder(String jvmFlags, String sbtFlags, String targets) {
+	public SbtPluginBuilder(String jvmFlags, String sbtFlags, String actions) {
 		this.jvmFlags = jvmFlags;
 		this.sbtFlags = sbtFlags;
-		this.targets = targets;
+		this.actions = actions;
 	}
 
 	public String getJvmFlags() {
@@ -66,8 +66,8 @@ public class SbtPluginBuilder extends Builder {
 		return sbtFlags;
 	}
 
-	public String getTargets() {
-		return targets;
+	public String getActions() {
+		return actions;
 	}
 
 	@Override
@@ -143,9 +143,9 @@ public class SbtPluginBuilder extends Builder {
 
 		args.add(sbtJarPath);
 
-		split = targets.split(" ");
-		for (String target : split) {
-			args.add(target);
+		split = actions.split(" ");
+		for (String action : split) {
+			args.add(action);
 		}
 
 		return args;
