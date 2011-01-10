@@ -3,16 +3,57 @@
   <parent>
     <groupId>org.jvnet.hudson.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.392</version><!-- which version of Hudson is this plugin built against? -->
+    <version>1.392</version>
     <relativePath>../pom.xml</relativePath>
   </parent>
 
-  <groupId>org.jvnet.hudson.plugins</groupId>
   <artifactId>sbt</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
+  <name>Hudson sbt plugin</name>
+  <description>Build your scala project using sbt in Hudson</description>
+  <url>http://wiki.hudson-ci.org/display/HUDSON/sbt+plugin</url>
 
-  <!-- get every artifact through maven.glassfish.org, which proxies all the artifacts that we need -->
+  <developers>
+    <developer>
+      <id>uzilan</id>
+      <name>Uzi Landsmann</name>
+      <email>uzi.landsmann@gmail.com</email>
+    </developer>
+  </developers>
+  
+  <distributionManagement>
+    <snapshotRepository>
+      <!-- prevent accidental deployment of SNAPSHOTS to repository -->
+      <id>local.repository</id>
+      <url>file:.</url>
+    </snapshotRepository>
+    <repository>
+      <id>java.net-m2-repository</id>
+      <url>http://maven.hudson-labs.org:8081/content/repositories/releases/</url>
+    </repository>
+  </distributionManagement>  
+  
+  <scm>
+    <connection>scm:git:git://github.com/hudson/sbt-plugin.git</connection>
+    <developerConnection>scm:git:git@github.com:hudson/sbt-plugin.git</developerConnection>
+    <url>http://github.com/hudson/sbt-plugin</url>
+  </scm>
+  
+  <build>
+    <plugins>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.3.2</version>
+            <configuration>
+                <source>1.5</source>
+                <target>1.5</target>
+            </configuration>
+        </plugin>
+    </plugins>
+  </build>
+
   <repositories>
     <repository>
       <id>m.g.o-public</id>
@@ -26,6 +67,7 @@
       <url>http://maven.glassfish.org/content/groups/public/</url>
     </pluginRepository>
   </pluginRepositories>
+
   <dependencies>
   	<dependency>
   		<groupId>commons-lang</groupId>
@@ -33,4 +75,5 @@
   		<version>2.5</version>
   	</dependency>
   </dependencies>
+
 </project>
