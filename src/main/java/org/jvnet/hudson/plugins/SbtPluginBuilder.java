@@ -16,6 +16,10 @@ import hudson.util.FormValidation;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
 
@@ -143,12 +147,29 @@ public class SbtPluginBuilder extends Builder {
 
 		args.add(sbtJarPath);
 
-		split = actions.split(" ");
-		for (String action : split) {
+		for (String action : split(actions)) {
 			args.add(action);
 		}
 
 		return args;
+	}
+
+	/*
+	 * Splits by whitespace except if surrounded by quotes.
+	 * See http://stackoverflow.com/questions/366202/regex-for-splitting-a-string-using-space-when-not-surrounded-by-single-or-double/366532#366532
+	 */
+	private List<String> split(String s) {
+		List<String> result = new ArrayList<String>();
+		Matcher matcher = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'").matcher(s);
+		while (matcher.find()) {
+			if (matcher.group(1) != null)
+				result.add(matcher.group(1));
+			else if (matcher.group(2) != null)
+				result.add(matcher.group(2));
+			else
+				result.add(matcher.group());
+		}
+		return result;
 	}
 
 	// overrided for better type safety.
