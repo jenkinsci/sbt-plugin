@@ -1,3 +1,8 @@
-This plugin allows bulding projects using the sbt tool.
+This plugin allows bulding Scala projects using sbt.
 
-sbt (http://code.google.com/p/simple-build-tool/) is a simple build tool for Scala projects that aims to do the basics well.
+For more information about this plugin please visit:
+http://wiki.hudson-ci.org/display/HUDSON/sbt+plugin
+
+Please report issues at:
+http://issues.hudson-ci.org/browse/HUDSON/component/15775
+
