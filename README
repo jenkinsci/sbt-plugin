@@ -1,8 +1,7 @@
 This plugin allows bulding Scala projects using sbt.
 
 For more information about this plugin please visit:
-http://wiki.hudson-ci.org/display/HUDSON/sbt+plugin
+http://wiki.jenkins-ci.org/display/JENKINS/sbt+plugin
 
 Please report issues at:
-http://issues.hudson-ci.org/browse/HUDSON/component/15775
-
+http://issues.jenkins-ci.org/browse/JENKINS/component/15775
