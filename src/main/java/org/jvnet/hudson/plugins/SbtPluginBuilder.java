@@ -128,10 +128,14 @@ public class SbtPluginBuilder extends Builder {
 		}
 
 		// java
-		String java = build.getProject().getJDK() != null ? build.getProject()
-				.getJDK().getBinDir()
-				+ "/java" : "java";
-		args.add(new File(java).getAbsolutePath());
+		String javaExePath;
+		if (build.getProject().getJDK() != null) {
+			javaExePath = new File(build.getProject().getJDK().getBinDir()
+					+ "/java").getAbsolutePath();
+		} else {
+			javaExePath = "java";
+		}
+		args.add(javaExePath);
 
 		String[] split = jvmFlags.split(" ");
 		for (String flag : split) {
