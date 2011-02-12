@@ -5,11 +5,11 @@ About
 -----
 This plugin allows bulding [Scala] projects in [Jenkins] using [sbt].
 
-For more information about this plugin please visit the plugins page on the Jenkins [wiki].
+For more information about this plugin please visit the plugins page on Jenkins [wiki].
 
 Issues
 ------
-Please report issues at the projects [Jira].
+Please report issues at the project's [Jira].
 
 Contact
 -------
