@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>sbt</artifactId>
-  <version>1.1</version>
+  <version>1.2-SNAPSHOT</version>
   <packaging>hpi</packaging>
   <name>Hudson sbt plugin</name>
   <description>Build your scala project using sbt in Hudson</description>
