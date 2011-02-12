@@ -16,12 +16,16 @@ import hudson.util.FormValidation;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.servlet.ServletException;
+
+import jline.ArgumentCompletor;
 
 import net.sf.json.JSONObject;
 
@@ -31,7 +35,7 @@ import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
 /**
- * Sample {@link Builder}.
+ * sbt plugin {@link Builder}.
  * 
  * <p>
  * When the user configures the project and enables this builder,
@@ -45,21 +49,31 @@ import org.kohsuke.stapler.StaplerRequest;
  * {@link #perform(AbstractBuild, Launcher, BuildListener)} method will be
  * invoked.
  * 
- * @author Kohsuke Kawaguchi
+ * @author Uzi Landsmann
  */
 public class SbtPluginBuilder extends Builder {
 
-	private final String actions;
+	public static final Logger LOGGER = Logger.getLogger(SbtPluginBuilder.class
+			.getName());
+
+	private final String name;
 	private final String jvmFlags;
 	private final String sbtFlags;
+	private final String actions;
 
 	// Fields in config.jelly must match the parameter names in the
 	// "DataBoundConstructor"
 	@DataBoundConstructor
-	public SbtPluginBuilder(String jvmFlags, String sbtFlags, String actions) {
+	public SbtPluginBuilder(String name, String jvmFlags, String sbtFlags,
+			String actions) {
+		this.name = name;
 		this.jvmFlags = jvmFlags;
 		this.sbtFlags = sbtFlags;
 		this.actions = actions;
+	}
+
+	public String getName() {
+		return name;
 	}
 
 	public String getJvmFlags() {
@@ -74,6 +88,10 @@ public class SbtPluginBuilder extends Builder {
 		return actions;
 	}
 
+	/**
+	 * Perform the sbt build. Interpret the command arguments and create a
+	 * command line, then run it.
+	 */
 	@Override
 	public boolean perform(AbstractBuild build, Launcher launcher,
 			BuildListener listener) {
@@ -95,31 +113,40 @@ public class SbtPluginBuilder extends Builder {
 			return success;
 		} catch (IllegalArgumentException e) {
 			// Util.displayIOException(e, listener);
-			e.printStackTrace(listener.fatalError("command execution failed"));
+			e.printStackTrace(listener.fatalError("command execution failed: "
+					+ e.getMessage()));
 			build.setResult(Result.FAILURE);
 			return false;
 		} catch (IOException e) {
 			Util.displayIOException(e, listener);
-			e.printStackTrace(listener.fatalError("command execution failed"));
+			e.printStackTrace(listener.fatalError("command execution failed: "
+					+ e.getMessage()));
 			build.setResult(Result.FAILURE);
 			return false;
 		} catch (InterruptedException e) {
 			// Util.displayIOException(e, listener);
-			e.printStackTrace(listener.fatalError("command execution failed"));
+			e.printStackTrace(listener.fatalError("command execution failed: "
+					+ e.getMessage()));
 			build.setResult(Result.FAILURE);
 			return false;
 		}
 
 	}
 
+	/**
+	 * Create an {@link ArgumentListBuilder} to run the build, given command
+	 * arguments.
+	 */
 	private ArgumentListBuilder buildCmdLine(AbstractBuild build,
 			Launcher launcher, BuildListener listener)
 			throws IllegalArgumentException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 
-		String sbtJarPath = getDescriptor().getSbtJarPath();
+		DescriptorImpl descriptor = (DescriptorImpl) getDescriptor();
 
-		if (StringUtils.isBlank(sbtJarPath)) {
+		String launcherPath = descriptor.getJar(name).getPath();
+
+		if (StringUtils.isBlank(launcherPath)) {
 			throw new IllegalArgumentException("SBT jar path is empty");
 		}
 
@@ -133,19 +160,12 @@ public class SbtPluginBuilder extends Builder {
 				+ "/java" : "java";
 		args.add(new File(java).getAbsolutePath());
 
-		String[] split = jvmFlags.split(" ");
-		for (String flag : split) {
-			args.add(flag);
-		}
-
-		split = sbtFlags.split(" ");
-		for (String flag : split) {
-			args.add(flag);
-		}
+		splitAndAddArgs(jvmFlags, args);
+		splitAndAddArgs(sbtFlags, args);
 
 		args.add("-jar");
 
-		args.add(sbtJarPath);
+		args.add(launcherPath);
 
 		for (String action : split(actions)) {
 			args.add(action);
@@ -154,13 +174,35 @@ public class SbtPluginBuilder extends Builder {
 		return args;
 	}
 
+	/**
+	 * Split arguments and add them to the args list
+	 * 
+	 * @param argsToSplit
+	 *            the arguments to split
+	 * @param args
+	 *            java/sbt command arguments
+	 */
+	private void splitAndAddArgs(String argsToSplit, ArgumentListBuilder args) {
+		if (StringUtils.isBlank(argsToSplit)) {
+			return;
+		}
+
+		String[] split = argsToSplit.split(" ");
+		for (String flag : split) {
+			args.add(flag);
+		}
+	}
+
 	/*
-	 * Splits by whitespace except if surrounded by quotes.
-	 * See http://stackoverflow.com/questions/366202/regex-for-splitting-a-string-using-space-when-not-surrounded-by-single-or-double/366532#366532
+	 * Splits by whitespace except if surrounded by quotes. See
+	 * http://stackoverflow
+	 * .com/questions/366202/regex-for-splitting-a-string-using
+	 * -space-when-not-surrounded-by-single-or-double/366532#366532
 	 */
 	private List<String> split(String s) {
 		List<String> result = new ArrayList<String>();
-		Matcher matcher = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'").matcher(s);
+		Matcher matcher = Pattern.compile("[^\\s\"']+|\"([^\"]*)\"|'([^']*)'")
+				.matcher(s);
 		while (matcher.find()) {
 			if (matcher.group(1) != null)
 				result.add(matcher.group(1));
@@ -172,9 +214,6 @@ public class SbtPluginBuilder extends Builder {
 		return result;
 	}
 
-	// overrided for better type safety.
-	// if your plugin doesn't really define any property on Descriptor,
-	// you don't have to do this.
 	@Override
 	public DescriptorImpl getDescriptor() {
 		return (DescriptorImpl) super.getDescriptor();
@@ -194,53 +233,107 @@ public class SbtPluginBuilder extends Builder {
 	public static final class DescriptorImpl extends
 			BuildStepDescriptor<Builder> {
 
-		private String sbtJarPath;
+		private volatile Jar[] jars = new Jar[0];
 
 		public DescriptorImpl() {
+			super(SbtPluginBuilder.class);
 			load();
 		}
 
-		/**
-		 * Performs on-the-fly validation of the form field 'name'.
-		 * 
-		 * @param value
-		 *            This parameter receives the value that the user has typed.
-		 * @return Indicates the outcome of the validation. This is sent to the
-		 *         browser.
-		 */
-		public FormValidation doCheckSbtJarPath(@QueryParameter String value)
-				throws IOException, ServletException {
-			if (value.isEmpty()) {
-				return FormValidation.error("Please enter a path");
-			}
-			return FormValidation.ok();
+		@Override
+		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
+			return true;
 		}
 
-		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
-			// indicates that this builder can be used with all kinds of project
-			// types
-			return true;
+		@Override
+		public Builder newInstance(StaplerRequest req, JSONObject formData) {
+
+			LOGGER.info(String.format("Creating new instance with formData %s",
+					formData));
+
+			String name = formData.getString("name");
+			String jvmFlags = formData.getString("jvmFlags");
+			String sbtFlags = formData.getString("sbtFlags");
+			String actions = formData.getString("actions");
+
+			return new SbtPluginBuilder(name, jvmFlags, sbtFlags, actions);
 		}
 
 		/**
 		 * This human readable name is used in the configuration screen.
 		 */
 		public String getDisplayName() {
-			return "Build using SBT";
+			return "Build using sbt";
+		}
+
+		public Jar getJar(String name) {
+			for (Jar jar : jars) {
+				if (jar.getName().equals(name)) {
+					return jar;
+				}
+			}
+			return null;
 		}
 
 		@Override
 		public boolean configure(StaplerRequest req, JSONObject formData)
 				throws FormException {
-			sbtJarPath = formData.getString("sbtJarPath");
+			
+			try {
+				jars = req.bindJSONToList(Jar.class,
+						req.getSubmittedForm().get("jar")).toArray(new Jar[0]);
+				save();
+				return true;
+			} catch (ServletException e) {
 
-			save();
-			return super.configure(req, formData);
+				LOGGER.severe(String.format("Couldn't save jars beacause %s",
+						e.getMessage()));
+				LOGGER.severe(String.format("Stacktrace %s", e.getStackTrace()
+						.toString()));
+
+				return false;
+			}
 		}
 
-		public String getSbtJarPath() {
-			return sbtJarPath;
+		public Jar[] getJars() {
+			return jars;
 		}
 
+	}
+
+	/**
+	 * Representation of an sbt launcher. Several such launchers can be defined
+	 * in Jenkins properties to choose among when running a project.
+	 */
+	public static final class Jar implements Serializable {
+		private static final long serialVersionUID = 1L;
+
+		/** The human-friendly name of this launcher */
+		private String name;
+		
+		/** The path to the launcher */
+		private String path;
+
+		@DataBoundConstructor
+		public Jar(String name, String path) {
+			this.name = name;
+			this.path = path;
+		}
+
+		public String getName() {
+			return name;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public String getPath() {
+			return path;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
 	}
 }

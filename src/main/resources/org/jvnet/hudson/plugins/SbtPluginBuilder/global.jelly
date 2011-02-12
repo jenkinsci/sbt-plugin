@@ -2,12 +2,30 @@
   <!--
     This Jelly script is used to produce the global configuration option.
   -->
-  <f:section title="SBT">
+  <f:section title="sbt">
     
-    <f:entry title="SBT launch jar path"
-    	field="sbtJarPath">
-    	<f:textbox value="${descriptor.getSbtJarPath()}"/>
+    <f:entry title="sbt launch jars">
+    	<f:repeatable var="jar" items="${descriptor.jars}">
+        	<table width="100%"> 
+        		
+        		<f:entry title="Name">
+            		<f:textbox name="jar.name" value="${jar.name}"/>
+          		</f:entry>
+          		
+          		<f:entry title="Path">
+            		<f:textbox name="jar.path" value="${jar.path}"/>
+          		</f:entry>
+          		
+          		<f:entry title="">
+            		<div align="right">
+              			<f:repeatableDeleteButton />
+            		</div>
+          		</f:entry>
+          		
+			</table>
+      	</f:repeatable>
     </f:entry>
+	
     
   </f:section>
 </j:jelly>

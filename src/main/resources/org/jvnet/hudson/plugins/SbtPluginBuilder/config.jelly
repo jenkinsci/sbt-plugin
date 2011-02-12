@@ -4,12 +4,20 @@
 
     See global.jelly for a general discussion about jelly script.
   -->
+  
+  <f:entry title="sbt launcher">
+  	<select class="setting-input" name="jar.name" description="Select configured sbt launcher">
+        <j:forEach var="jar" items="${descriptor.jars}">
+          <f:option selected="${jar.name.equals(instance.name)}">${jar.name}</f:option>
+        </j:forEach>
+      </select>
+  </f:entry>
 
   <f:entry title="JVM Flags" field="jvmFlags">
   	<f:textbox/>
   </f:entry>
 
-  <f:entry title="SBT Flags" field="sbtFlags" >
+  <f:entry title="sbt Flags" field="sbtFlags" >
   	<f:textbox default="-Dsbt.log.noformat=true"/>
   </f:entry>
 
