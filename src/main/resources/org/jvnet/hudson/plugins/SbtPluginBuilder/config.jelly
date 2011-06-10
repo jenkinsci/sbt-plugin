@@ -25,4 +25,12 @@
   	<f:textbox/>
   </f:entry>
   
+  <f:optionalBlock field="doSubdir"
+		               title="${%Run in subdirectory}"
+		               checked="${doSubdir}">
+		<f:entry title="Path:" field="subdirPath">
+		  <f:textbox/>
+		</f:entry>
+  </f:optionalBlock>
+  
 </j:jelly>

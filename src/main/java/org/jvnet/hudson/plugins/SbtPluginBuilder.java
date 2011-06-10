@@ -60,6 +60,8 @@ public class SbtPluginBuilder extends Builder {
 	private final String jvmFlags;
 	private final String sbtFlags;
 	private final String actions;
+  private boolean doSubdir;
+  private String subdirPath;
 
 	// Fields in config.jelly must match the parameter names in the
 	// "DataBoundConstructor"
@@ -87,6 +89,26 @@ public class SbtPluginBuilder extends Builder {
 	public String getActions() {
 		return actions;
 	}
+  
+  public boolean getDoSubdir()
+  {
+    return doSubdir;
+  }
+  
+  public void setDoSubdir(boolean doSubdir)
+  {
+    this.doSubdir = doSubdir;
+  }
+
+  public String getSubdirPath()
+  {
+    return subdirPath;
+  }
+
+  public void setSubdirPath(String subdirPath)
+  {
+    this.subdirPath = subdirPath;
+  }
 
 	/**
 	 * Perform the sbt build. Interpret the command arguments and create a
@@ -104,6 +126,11 @@ public class SbtPluginBuilder extends Builder {
 					listener);
 			String[] cmds = cmdLine.toCommandArray();
 			env = build.getEnvironment(listener);
+      
+      if(doSubdir && subdirPath != null && subdirPath.length() > 0) {
+        workDir = new FilePath(workDir, subdirPath);
+        System.out.println("HELLO SUBDIR");
+      }
 
 			int exitValue = launcher.launch().cmds(cmds).envs(env)
 					.stdout(listener).pwd(workDir).join();
@@ -259,8 +286,21 @@ public class SbtPluginBuilder extends Builder {
 			String jvmFlags = formData.getString("jvmFlags");
 			String sbtFlags = formData.getString("sbtFlags");
 			String actions = formData.getString("actions");
+      
+      SbtPluginBuilder builder = new SbtPluginBuilder(name, jvmFlags, sbtFlags, actions);
+      
+      if (formData.has("doSubdir"))
+      {
+        builder.setDoSubdir(true);
+        JSONObject subdirData = formData.getJSONObject("doSubdir");
+        builder.setSubdirPath(subdirData.getString("subdirPath"));
+      }
+      else
+      {
+        builder.setDoSubdir(false);
+      }
 
-			return new SbtPluginBuilder(name, jvmFlags, sbtFlags, actions);
+			return builder;
 		}
 
 		/**
