@@ -60,18 +60,18 @@ public class SbtPluginBuilder extends Builder {
 	private final String jvmFlags;
 	private final String sbtFlags;
 	private final String actions;
-  private boolean doSubdir;
-  private String subdirPath;
+    private String subdirPath;
 
 	// Fields in config.jelly must match the parameter names in the
 	// "DataBoundConstructor"
 	@DataBoundConstructor
 	public SbtPluginBuilder(String name, String jvmFlags, String sbtFlags,
-			String actions) {
+			String actions, String subdirPath) {
 		this.name = name;
 		this.jvmFlags = jvmFlags;
 		this.sbtFlags = sbtFlags;
 		this.actions = actions;
+        this.subdirPath = subdirPath;
 	}
 
 	public String getName() {
@@ -89,26 +89,10 @@ public class SbtPluginBuilder extends Builder {
 	public String getActions() {
 		return actions;
 	}
-  
-  public boolean getDoSubdir()
-  {
-    return doSubdir;
-  }
-  
-  public void setDoSubdir(boolean doSubdir)
-  {
-    this.doSubdir = doSubdir;
-  }
 
-  public String getSubdirPath()
-  {
-    return subdirPath;
-  }
-
-  public void setSubdirPath(String subdirPath)
-  {
-    this.subdirPath = subdirPath;
-  }
+    public String getSubdirPath() {
+        return subdirPath;
+    }
 
 	/**
 	 * Perform the sbt build. Interpret the command arguments and create a
@@ -126,13 +110,12 @@ public class SbtPluginBuilder extends Builder {
 					listener);
 			String[] cmds = cmdLine.toCommandArray();
 			env = build.getEnvironment(listener);
-      
-      if(doSubdir && subdirPath != null && subdirPath.length() > 0) {
-        workDir = new FilePath(workDir, subdirPath);
-        System.out.println("HELLO SUBDIR");
-      }
 
-			int exitValue = launcher.launch().cmds(cmds).envs(env)
+            if (subdirPath != null && subdirPath.length() > 0) {
+                workDir = new FilePath(workDir, subdirPath);
+            }
+
+            int exitValue = launcher.launch().cmds(cmds).envs(env)
 					.stdout(listener).pwd(workDir).join();
 
 			boolean success = (exitValue == 0);
@@ -274,33 +257,6 @@ public class SbtPluginBuilder extends Builder {
 		@Override
 		public boolean isApplicable(Class<? extends AbstractProject> aClass) {
 			return true;
-		}
-
-		@Override
-		public Builder newInstance(StaplerRequest req, JSONObject formData) {
-
-			LOGGER.info(String.format("Creating new instance with formData %s",
-					formData));
-
-			String name = formData.getString("name");
-			String jvmFlags = formData.getString("jvmFlags");
-			String sbtFlags = formData.getString("sbtFlags");
-			String actions = formData.getString("actions");
-      
-      SbtPluginBuilder builder = new SbtPluginBuilder(name, jvmFlags, sbtFlags, actions);
-      
-      if (formData.has("doSubdir"))
-      {
-        builder.setDoSubdir(true);
-        JSONObject subdirData = formData.getJSONObject("doSubdir");
-        builder.setSubdirPath(subdirData.getString("subdirPath"));
-      }
-      else
-      {
-        builder.setDoSubdir(false);
-      }
-
-			return builder;
 		}
 
 		/**
