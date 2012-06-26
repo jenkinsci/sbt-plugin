@@ -137,7 +137,7 @@ public class SbtPluginBuilder extends Builder {
 			// Util.displayIOException(e, listener);
 			e.printStackTrace(listener.fatalError("command execution failed: "
 					+ e.getMessage()));
-			build.setResult(Result.FAILURE);
+			build.setResult(Result.ABORTED);
 			return false;
 		}
 
