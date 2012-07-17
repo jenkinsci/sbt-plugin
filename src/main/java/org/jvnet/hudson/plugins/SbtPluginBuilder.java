@@ -6,6 +6,8 @@ import hudson.FilePath;
 import hudson.Launcher;
 import hudson.Util;
 import hudson.model.BuildListener;
+import hudson.model.Computer;
+import hudson.model.JDK;
 import hudson.model.Result;
 import hudson.model.AbstractBuild;
 import hudson.model.AbstractProject;
@@ -149,7 +151,7 @@ public class SbtPluginBuilder extends Builder {
 	 */
 	private ArgumentListBuilder buildCmdLine(AbstractBuild build,
 			Launcher launcher, BuildListener listener)
-			throws IllegalArgumentException {
+			throws IllegalArgumentException, InterruptedException, IOException {
 		ArgumentListBuilder args = new ArgumentListBuilder();
 
 		DescriptorImpl descriptor = (DescriptorImpl) getDescriptor();
@@ -166,8 +168,16 @@ public class SbtPluginBuilder extends Builder {
 
 		// java
 		String javaExePath;
-		if (build.getProject().getJDK() != null) {
-			javaExePath = new File(build.getProject().getJDK().getBinDir()
+		
+		JDK jdk = build.getProject().getJDK();
+		Computer computer = Computer.currentComputer();
+		if (computer != null && jdk != null) { // just in case were not in a build
+		    // use node specific installers, etc
+		    jdk = jdk.forNode(computer.getNode(), listener);
+		}
+				
+		if (jdk != null) {
+			javaExePath = new File(jdk.getBinDir()
 					+ "/java").getAbsolutePath();
 		} else {
 			javaExePath = "java";
