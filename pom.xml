@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>sbt</artifactId>
-  <version>1.4-SNAPSHOT</version>
+  <version>1.4</version>
   <packaging>hpi</packaging>
   <name>Jenkins sbt plugin</name>
   <description>Build your scala project using sbt in Jenkins</description>
