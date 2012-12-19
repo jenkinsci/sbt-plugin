@@ -288,6 +288,7 @@ public class SbtPluginBuilder extends Builder {
         /**
          * This human readable name is used in the configuration screen.
          */
+        @Override
         public String getDisplayName() {
             return "Build using sbt";
         }
@@ -433,10 +434,10 @@ public class SbtPluginBuilder extends Builder {
                     .setInstallations(installations);
             }
 
-            /*@Override
+            @Override
             public List<? extends ToolInstaller> getDefaultInstallers() {
                 return Collections.singletonList(new SbtInstaller(null));
-            }*/
+            }
 
             @Override
             public String getDisplayName() {
@@ -464,7 +465,7 @@ public class SbtPluginBuilder extends Builder {
     /**
      * Automatic Sbt installer from scala-sbt.org
      */
-    /*public static class SbtInstaller extends DownloadFromUrlInstaller {
+    public static class SbtInstaller extends DownloadFromUrlInstaller {
 
         @DataBoundConstructor
         protected SbtInstaller(String id) {
@@ -484,5 +485,5 @@ public class SbtPluginBuilder extends Builder {
                 return toolType == SbtInstallation.class;
             }
         }
-    }*/
+    }
 }
