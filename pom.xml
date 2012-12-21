@@ -3,8 +3,8 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.396</version>
-    <relativePath>../pom.xml</relativePath>
+    <version>1.431</version>
+    <!--<relativePath>../pom.xml</relativePath>-->
   </parent>
 
   <artifactId>sbt</artifactId>
