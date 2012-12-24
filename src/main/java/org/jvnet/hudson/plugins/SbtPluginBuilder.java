@@ -453,7 +453,11 @@ public class SbtPluginBuilder extends Builder {
                     return FormValidation.ok();
                 }
 
-                if (!value.exists()) {
+                // allow empty input
+                if(value.getPath().equals(""))
+                    return FormValidation.ok();
+
+                if (!value.exists() || !value.isFile()) {
                     return FormValidation.error("sbt-launch.jar not found");
                 }
 
