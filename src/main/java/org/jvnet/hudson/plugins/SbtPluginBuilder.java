@@ -1,13 +1,36 @@
 package org.jvnet.hudson.plugins;
 
-import hudson.*;
-import hudson.model.*;
+import hudson.CopyOnWrite;
+import hudson.EnvVars;
+import hudson.Extension;
+import hudson.FilePath;
+import hudson.Launcher;
+import hudson.Util;
+import hudson.model.AbstractBuild;
+import hudson.model.AbstractProject;
+import hudson.model.BuildListener;
+import hudson.model.Computer;
+import hudson.model.EnvironmentSpecific;
+import hudson.model.JDK;
+import hudson.model.Node;
+import hudson.model.Result;
+import hudson.model.TaskListener;
+import hudson.remoting.Callable;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
-import hudson.tools.*;
+import hudson.tools.DownloadFromUrlInstaller;
+import hudson.tools.ToolDescriptor;
+import hudson.tools.ToolInstallation;
+import hudson.tools.ToolInstaller;
+import hudson.tools.ToolProperty;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
+import jenkins.model.Jenkins;
+import org.apache.commons.lang.StringUtils;
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.StaplerRequest;
 
 import java.io.File;
 import java.io.IOException;
@@ -18,18 +41,6 @@ import java.util.List;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import javax.servlet.ServletException;
-
-import jenkins.model.Jenkins;
-import jline.ArgumentCompletor;
-
-import net.sf.json.JSONObject;
-
-import org.apache.commons.lang.StringUtils;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.QueryParameter;
-import org.kohsuke.stapler.StaplerRequest;
 
 /**
  * sbt plugin {@link Builder}.
@@ -156,15 +167,15 @@ public class SbtPluginBuilder extends Builder {
 
         SbtInstallation sbt = getSbt();
         if (sbt == null) {
-            throw new IllegalArgumentException("SBT jar path is empty");
+            throw new IllegalArgumentException("sbt-launch.jar not found");
         } else {
             sbt = sbt.forNode(Computer.currentComputer().getNode(), listener);
             sbt = sbt.forEnvironment(env);
 
-            String launcherPath = sbt.getHome();
+            String launcherPath = sbt.getSbtLaunchJar(launcher);
 
             if (launcherPath == null) {
-                throw new IllegalArgumentException("SBT jar path is empty");
+                throw new IllegalArgumentException("sbt-launch.jar not found");
             }
 
             if (!launcher.isUnix()) {
@@ -390,7 +401,6 @@ public class SbtPluginBuilder extends Builder {
         @DataBoundConstructor
         public SbtInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
             super(name, launderHome(home), properties);
-            this.sbtLaunchJar = super.getHome();
         }
 
         private static String launderHome(String home) {
@@ -403,12 +413,20 @@ public class SbtPluginBuilder extends Builder {
             }
         }
 
-        @Override
-        public String getHome() {
-            if (sbtLaunchJar != null) {
-                return sbtLaunchJar;
-            }
-            return super.getHome();
+        public String getSbtLaunchJar(Launcher launcher) throws IOException, InterruptedException {
+            return launcher.getChannel().call(new Callable<String, IOException>() {
+                public String call() throws IOException {
+                    File sbtLaunchJarFile = getSbtLaunchJarFile();
+                    if(sbtLaunchJarFile.exists())
+                        return sbtLaunchJarFile.getPath();
+                    return getHome();
+                }
+            });
+        }
+
+        private File getSbtLaunchJarFile() {
+            String home = Util.replaceMacro(getHome(), EnvVars.masterEnvVars);
+            return new File(home, "bin/sbt-launch.jar");
         }
 
         public SbtInstallation forEnvironment(EnvVars environment) {
@@ -453,7 +471,11 @@ public class SbtPluginBuilder extends Builder {
                     return FormValidation.ok();
                 }
 
-                if (!value.exists()) {
+                // allow empty input
+                if(value.getPath().equals(""))
+                    return FormValidation.ok();
+
+                if (!value.exists() || !value.isFile()) {
                     return FormValidation.error("sbt-launch.jar not found");
                 }
 
@@ -468,7 +490,7 @@ public class SbtPluginBuilder extends Builder {
     public static class SbtInstaller extends DownloadFromUrlInstaller {
 
         @DataBoundConstructor
-        protected SbtInstaller(String id) {
+        public SbtInstaller(String id) {
             super(id);
         }
 
@@ -477,7 +499,7 @@ public class SbtPluginBuilder extends Builder {
 
             @Override
             public String getDisplayName() {
-                return "Install from repo.typesafe.com";
+                return "Install from scala-sbt.org";
             }
 
             @Override
