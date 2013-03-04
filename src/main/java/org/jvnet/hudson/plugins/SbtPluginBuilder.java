@@ -193,8 +193,7 @@ public class SbtPluginBuilder extends Builder {
             }
 
             if (jdk != null) {
-                javaExePath = new File(jdk.getBinDir()
-                    + "/java").getAbsolutePath();
+                javaExePath = jdk.getHome() + "/bin/java";
             } else {
                 javaExePath = "java";
             }
