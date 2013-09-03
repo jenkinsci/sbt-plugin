@@ -199,8 +199,8 @@ public class SbtPluginBuilder extends Builder {
             }
             args.add(javaExePath);
 
-            splitAndAddArgs(jvmFlags, args);
-            splitAndAddArgs(sbtFlags, args);
+            splitAndAddArgs(env.expand(jvmFlags), args);
+            splitAndAddArgs(env.expand(sbtFlags), args);
 
             args.add("-jar");
 
