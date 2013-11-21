@@ -234,7 +234,7 @@ public class SbtPluginBuilder extends Builder {
             return;
         }
 
-        String[] split = argsToSplit.split(" ");
+        String[] split = argsToSplit.split("\\s+");
         for (String flag : split) {
             args.add(flag);
         }
