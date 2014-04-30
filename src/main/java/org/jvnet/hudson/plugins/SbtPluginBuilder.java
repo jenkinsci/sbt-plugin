@@ -202,6 +202,22 @@ public class SbtPluginBuilder extends Builder {
             splitAndAddArgs(env.expand(jvmFlags), args);
             splitAndAddArgs(env.expand(sbtFlags), args);
 
+            // additionnal args from .sbtopts file
+            FilePath sbtopts = build.getProject().getWorkspace().child(".sbtopts");
+            if (sbtopts.exists()) {
+                String argsToSplit = sbtopts.readToString();
+                if (!StringUtils.isBlank(argsToSplit)) {
+                    String[] split = argsToSplit.split("\\s+");
+                    for (String flag : split) {
+                        if (flag.startsWith("-J")) {
+                          args.add(flag.substring(2));
+                        } else {
+                          args.add(flag);
+                        }
+                    }
+                }
+            }
+
             args.add("-jar");
 
             args.add(launcherPath);
