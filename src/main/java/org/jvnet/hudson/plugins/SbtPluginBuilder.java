@@ -180,6 +180,8 @@ public class SbtPluginBuilder extends Builder {
 
             if (!launcher.isUnix()) {
                 args.add("cmd.exe", "/C");
+                // add an extra set of quotes after cmd/c to handle paths with spaces in Windows
+                args.add("\"");
             }
 
             // java
@@ -224,6 +226,10 @@ public class SbtPluginBuilder extends Builder {
 
             for (String action : split(actions)) {
                 args.add(action);
+            }
+
+            if (!launcher.isUnix()) {
+                args.add("\"");
             }
         }
 
@@ -524,3 +530,4 @@ public class SbtPluginBuilder extends Builder {
         }
     }
 }
+
