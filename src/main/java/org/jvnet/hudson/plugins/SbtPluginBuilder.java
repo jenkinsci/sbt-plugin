@@ -351,10 +351,10 @@ public class SbtPluginBuilder extends Builder {
         private String sbtArguments;
 
         @DataBoundConstructor
-        public SbtInstallation(String name, String home, String arguments, List<? extends ToolProperty<?>> properties) {
+        public SbtInstallation(String name, String home, String sbtArguments, List<? extends ToolProperty<?>> properties) {
             super(name, launderHome(home), properties);
-            this.sbtArguments = arguments;
-            LOGGER.fine("got sbtArguments config: " + arguments);
+            this.sbtArguments = sbtArguments;
+            LOGGER.fine("got sbtArguments config: " + sbtArguments);
         }
 
         private static String launderHome(String home) {

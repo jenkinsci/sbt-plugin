@@ -8,7 +8,7 @@
     <f:entry title="sbt launch jar" field="home">
         <f:textbox />
     </f:entry>
-    <f:entry title="sbt launch arguments" field="arguments">
+    <f:entry title="sbt launch arguments" field="sbtArguments">
         <f:textbox />
     </f:entry>
 </j:jelly>
