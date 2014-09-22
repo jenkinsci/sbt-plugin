@@ -202,6 +202,7 @@ public class SbtPluginBuilder extends Builder {
             args.add(javaExePath);
 
             splitAndAddArgs(env.expand(jvmFlags), args);
+            splitAndAddArgs(env.expand(sbt.getSbtArguments()), args);
             splitAndAddArgs(env.expand(sbtFlags), args);
 
             // additionnal args from .sbtopts file
@@ -325,39 +326,6 @@ public class SbtPluginBuilder extends Builder {
             return "Build using sbt";
         }
 
-		/*public Jar getJar(String name) {
-            for (Jar jar : jars) {
-				if (jar.getName().equals(name)) {
-					return jar;
-				}
-			}
-			return null;
-		}*/
-
-		/*@Override
-		public boolean configure(StaplerRequest req, JSONObject formData)
-				throws FormException {
-			
-			try {
-				jars = req.bindJSONToList(Jar.class,
-						req.getSubmittedForm().get("jar")).toArray(new Jar[0]);
-				save();
-				return true;
-			} catch (ServletException e) {
-
-				LOGGER.severe(String.format("Couldn't save jars beacause %s",
-						e.getMessage()));
-				LOGGER.severe(String.format("Stacktrace %s", e.getStackTrace()
-						.toString()));
-
-				return false;
-			}
-		}*/
-
-		/*public Jar[] getJars() {
-			return jars;
-		}*/
-
         public SbtInstallation.DescriptorImpl getToolDescriptor() {
             return ToolInstallation.all().get(SbtInstallation.DescriptorImpl.class);
         }
@@ -373,44 +341,6 @@ public class SbtPluginBuilder extends Builder {
 
     }
 
-    /**
-     * Representation of an sbt launcher. Several such launchers can be defined
-     * in Jenkins properties to choose among when running a project.
-     */
-	/*public static final class Jar implements Serializable {
-		private static final long serialVersionUID = 1L;
-    */
-    /** The human-friendly name of this launcher */
-    //	private String name;
-
-    /**
-     * The path to the launcher
-     */
-    //	private String path;
-    /*
-		@DataBoundConstructor
-		public Jar(String name, String path) {
-			this.name = name;
-			this.path = path;
-		}
-
-		public String getName() {
-			return name;
-		}
-
-		public void setName(String name) {
-			this.name = name;
-		}
-
-		public String getPath() {
-			return path;
-		}
-
-		public void setPath(String path) {
-			this.path = path;
-		}
-	} */
-
     public static final class SbtInstallation extends ToolInstallation implements
         EnvironmentSpecific<SbtInstallation>, NodeSpecific<SbtInstallation>, Serializable {
 
@@ -418,10 +348,13 @@ public class SbtPluginBuilder extends Builder {
 
         private String sbtLaunchJar;
 
+        private String sbtArguments;
 
         @DataBoundConstructor
-        public SbtInstallation(String name, String home, List<? extends ToolProperty<?>> properties) {
+        public SbtInstallation(String name, String home, String arguments, List<? extends ToolProperty<?>> properties) {
             super(name, launderHome(home), properties);
+            this.sbtArguments = arguments;
+            LOGGER.fine("got sbtArguments config: " + arguments);
         }
 
         private static String launderHome(String home) {
@@ -451,17 +384,20 @@ public class SbtPluginBuilder extends Builder {
         }
 
         public SbtInstallation forEnvironment(EnvVars environment) {
-            return new SbtInstallation(getName(), environment.expand(getHome()), getProperties().toList());
+            return new SbtInstallation(getName(), environment.expand(getHome()), sbtArguments, getProperties().toList());
         }
 
         public SbtInstallation forNode(Node node, TaskListener log) throws IOException, InterruptedException {
-            return new SbtInstallation(getName(), translateFor(node, log), getProperties().toList());
+            return new SbtInstallation(getName(), translateFor(node, log), sbtArguments, getProperties().toList());
+        }
+
+        public String getSbtArguments() {
+            return sbtArguments;
         }
 
         @Extension
         public static class DescriptorImpl extends ToolDescriptor<SbtInstallation> {
 
-            @Override
             public SbtInstallation[] getInstallations() {
                 return Jenkins.getInstance().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
                     .getInstallations();
