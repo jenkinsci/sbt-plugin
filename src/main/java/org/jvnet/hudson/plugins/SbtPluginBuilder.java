@@ -28,6 +28,7 @@ import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.text.StrSubstitutor;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -224,7 +225,8 @@ public class SbtPluginBuilder extends Builder {
 
             args.add(launcherPath);
 
-            for (String action : split(actions)) {
+            String subActions = new StrSubstitutor(env).replace(actions);
+            for (String action : split(subActions)) {
                 args.add(action);
             }
 
