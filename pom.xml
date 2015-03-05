@@ -8,7 +8,7 @@
   </parent>
 
   <artifactId>sbt</artifactId>
-  <version>1.5-SNAPSHOT</version>
+  <version>1.5</version>
   <packaging>hpi</packaging>
   <name>Jenkins sbt plugin</name>
   <description>Build your scala project using sbt in Jenkins</description>
@@ -34,6 +34,7 @@
     <connection>scm:git:git://github.com/jenkinsci/sbt-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/sbt-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/sbt-plugin</url>
+    <tag>sbt-1.5</tag>
   </scm>
   
   <repositories>
