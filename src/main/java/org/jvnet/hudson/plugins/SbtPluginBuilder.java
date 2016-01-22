@@ -121,7 +121,8 @@ public class SbtPluginBuilder extends Builder {
             env = build.getEnvironment(listener);
 
             if (subdirPath != null && subdirPath.length() > 0) {
-                workDir = new FilePath(workDir, subdirPath);
+                String subSubdirPath = new StrSubstitutor(env).replace(subdirPath);
+                workDir = new FilePath(workDir, subSubdirPath);
             }
 
             int exitValue = launcher.launch().cmds(cmds).envs(env)
