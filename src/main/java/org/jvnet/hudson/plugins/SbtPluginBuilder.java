@@ -167,7 +167,7 @@ public class SbtPluginBuilder extends Builder {
         EnvVars env = build.getEnvironment(listener);
         env.overrideAll(build.getBuildVariables());
 
-        SbtInstallation sbt = getSbt();
+        SbtInstallation sbt = getSbt(listener);
         if (sbt == null) {
             throw new IllegalArgumentException("sbt-launch.jar not found");
         } else {
@@ -177,7 +177,7 @@ public class SbtPluginBuilder extends Builder {
             String launcherPath = sbt.getSbtLaunchJar(launcher);
 
             if (launcherPath == null) {
-                throw new IllegalArgumentException("sbt-launch.jar not found");
+                throw new IllegalArgumentException("sbt-launch.jar not found on node");
             }
 
             if (!launcher.isUnix()) {
@@ -191,7 +191,7 @@ public class SbtPluginBuilder extends Builder {
 
             JDK jdk = build.getProject().getJDK();
             Computer computer = Computer.currentComputer();
-            if (computer != null && jdk != null) { // just in case were not in a build
+            if (computer != null && jdk != null) { // just in case we're not in a build
                 // use node specific installers, etc
                 jdk = jdk.forNode(computer.getNode(), listener);
             }
@@ -240,12 +240,23 @@ public class SbtPluginBuilder extends Builder {
         return args;
     }
 
-    private SbtInstallation getSbt() {
+    private SbtInstallation getSbt(BuildListener listener) {
+        if (name == null) {
+            listener.error("No sbt installation specified!");
+            return null;
+        }
+        List<String> installations = new ArrayList<String>();
         for (SbtInstallation sbtInstallation : getDescriptor().getInstallations()) {
-            if (name != null && name.equals(sbtInstallation.getName())) {
+            String installation = sbtInstallation.getName();
+            if (name.equals(installation)) {
                 return sbtInstallation;
             }
+            installations.add(installation);
         }
+        listener.error("Could not find sbt installation '" + name +
+                "' -- available installations are: " +
+                installations.toString());
+
         return null;
     }
 
