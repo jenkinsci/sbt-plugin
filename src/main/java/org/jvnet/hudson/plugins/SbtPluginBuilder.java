@@ -371,14 +371,7 @@ public class SbtPluginBuilder extends Builder {
         }
 
         public String getSbtLaunchJar(Launcher launcher) throws IOException, InterruptedException {
-            return launcher.getChannel().call(new Callable<String, IOException>() {
-                public String call() throws IOException {
-                    File sbtLaunchJarFile = getSbtLaunchJarFile();
-                    if(sbtLaunchJarFile.exists())
-                        return sbtLaunchJarFile.getPath();
-                    return getHome();
-                }
-            });
+            return launcher.getChannel().call(new GetLaunchPathOrHome());
         }
 
         private File getSbtLaunchJarFile() {
@@ -440,6 +433,15 @@ public class SbtPluginBuilder extends Builder {
                 }
 
                 return FormValidation.ok();
+            }
+        }
+
+        private class GetLaunchPathOrHome implements Callable<String, IOException> {
+            public String call() throws IOException {
+                File sbtLaunchJarFile = getSbtLaunchJarFile();
+                if(sbtLaunchJarFile.exists())
+                    return sbtLaunchJarFile.getPath();
+                return getHome();
             }
         }
     }
