@@ -15,7 +15,7 @@ import hudson.model.JDK;
 import hudson.model.Node;
 import hudson.model.Result;
 import hudson.model.TaskListener;
-import hudson.remoting.Callable;
+import hudson.remoting.VirtualChannel;
 import hudson.slaves.NodeSpecific;
 import hudson.tasks.BuildStepDescriptor;
 import hudson.tasks.Builder;
@@ -27,6 +27,7 @@ import hudson.tools.ToolProperty;
 import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
+import jenkins.security.NotReallyRoleSensitiveCallable;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -37,8 +38,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -108,7 +111,7 @@ public class SbtPluginBuilder extends Builder {
      * command line, then run it.
      */
     @Override
-    public boolean perform(AbstractBuild build, Launcher launcher,
+    public boolean perform(AbstractBuild<?, ?> build, Launcher launcher,
                            BuildListener listener) {
 
         EnvVars env = null;
@@ -157,7 +160,7 @@ public class SbtPluginBuilder extends Builder {
      * Create an {@link ArgumentListBuilder} to run the build, given command
      * arguments.
      */
-    private ArgumentListBuilder buildCmdLine(AbstractBuild build,
+    private ArgumentListBuilder buildCmdLine(AbstractBuild<?, ?> build,
                                              Launcher launcher, BuildListener listener)
         throws IllegalArgumentException, InterruptedException, IOException {
         ArgumentListBuilder args = new ArgumentListBuilder();
@@ -168,10 +171,15 @@ public class SbtPluginBuilder extends Builder {
         env.overrideAll(build.getBuildVariables());
 
         SbtInstallation sbt = getSbt();
+        final Computer currentComputer =
+            Optional.ofNullable(Computer.currentComputer()).orElseThrow(() -> new IllegalStateException("No current computer. This implies we are not being run on an Executor thread. This is a sbt-plugin bug."));
+        final Node currentComputerNode =
+            Optional.ofNullable(currentComputer.getNode()).orElseThrow(() -> new IllegalStateException("Configuration changed but node still present. This is probably a sbt-plugin bug."));
         if (sbt == null) {
             throw new IllegalArgumentException("sbt-launch.jar not found");
         } else {
-            sbt = sbt.forNode(Computer.currentComputer().getNode(), listener);
+
+            sbt = sbt.forNode(currentComputerNode, listener);
             sbt = sbt.forEnvironment(env);
 
             String launcherPath = sbt.getSbtLaunchJar(launcher);
@@ -187,37 +195,36 @@ public class SbtPluginBuilder extends Builder {
             }
 
             // java
-            String javaExePath;
 
-            JDK jdk = build.getProject().getJDK();
-            Computer computer = Computer.currentComputer();
-            if (computer != null && jdk != null) { // just in case were not in a build
-                // use node specific installers, etc
-                jdk = jdk.forNode(computer.getNode(), listener);
-            }
-
-            if (jdk != null) {
-                javaExePath = jdk.getHome() + "/bin/java";
+            // Add Java Exe Path
+            //
+            // Can't use java.util.Optional due to `forNode` throwing
+            // checked exceptions.
+            final JDK jdk = build.getProject().getJDK().forNode(currentComputerNode, listener);
+            if (jdk == null) {
+                args.add("java");
             } else {
-                javaExePath = "java";
+                args.add(jdk.getHome() + "/bin/java");
             }
-            args.add(javaExePath);
 
             splitAndAddArgs(env.expand(jvmFlags), args);
             splitAndAddArgs(env.expand(sbt.getSbtArguments()), args);
             splitAndAddArgs(env.expand(sbtFlags), args);
 
             // additionnal args from .sbtopts file
-            FilePath sbtopts = build.getProject().getWorkspace().child(".sbtopts");
-            if (sbtopts.exists()) {
-                String argsToSplit = sbtopts.readToString();
-                if (!StringUtils.isBlank(argsToSplit)) {
-                    String[] split = argsToSplit.split("\\s+");
-                    for (String flag : split) {
-                        if (flag.startsWith("-J")) {
-                          args.add(flag.substring(2));
-                        } else {
-                          args.add(flag);
+            final FilePath workspace = build.getWorkspace();
+            if (workspace != null) {
+                final FilePath sbtopts = workspace.child(".sbtopts");
+                if (sbtopts.exists()) {
+                    String argsToSplit = sbtopts.readToString();
+                    if (!StringUtils.isBlank(argsToSplit)) {
+                        String[] split = argsToSplit.split("\\s+");
+                        for (String flag : split) {
+                            if (flag.startsWith("-J")) {
+                                args.add(flag.substring(2));
+                            } else {
+                                args.add(flag);
+                            }
                         }
                     }
                 }
@@ -334,7 +341,7 @@ public class SbtPluginBuilder extends Builder {
         }
 
         public SbtInstallation[] getInstallations() {
-            return installations;
+            return Arrays.copyOf(installations, this.installations.length);
         }
 
         public void setInstallations(SbtInstallation... sbtInstallations) {
@@ -348,8 +355,6 @@ public class SbtPluginBuilder extends Builder {
         EnvironmentSpecific<SbtInstallation>, NodeSpecific<SbtInstallation>, Serializable {
 
         private static final long serialVersionUID = -2281774135009218882L;
-
-        private String sbtLaunchJar;
 
         private String sbtArguments;
 
@@ -371,14 +376,24 @@ public class SbtPluginBuilder extends Builder {
         }
 
         public String getSbtLaunchJar(Launcher launcher) throws IOException, InterruptedException {
-            return launcher.getChannel().call(new Callable<String, IOException>() {
-                public String call() throws IOException {
-                    File sbtLaunchJarFile = getSbtLaunchJarFile();
-                    if(sbtLaunchJarFile.exists())
-                        return sbtLaunchJarFile.getPath();
-                    return getHome();
-                }
-            });
+            final VirtualChannel channel = launcher.getChannel();
+            if (channel == null) {
+                throw new RuntimeException("Target node is not configured to support getting channels to run remote processes");
+            } else {
+                return channel.call(new NotReallyRoleSensitiveCallable<String, IOException>() {
+
+                        private static final long serialVersionUID = -6247304070201092005L;
+
+                        public final String call() throws IOException {
+                            File sbtLaunchJarFile = getSbtLaunchJarFile();
+                            if(sbtLaunchJarFile.exists()) {
+                                return sbtLaunchJarFile.getPath();
+                            } else {
+                                return getHome();
+                            }
+                        }
+                    });
+            }
         }
 
         private File getSbtLaunchJarFile() {
@@ -402,13 +417,13 @@ public class SbtPluginBuilder extends Builder {
         public static class DescriptorImpl extends ToolDescriptor<SbtInstallation> {
 
             public SbtInstallation[] getInstallations() {
-                return Jenkins.getInstance().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
+                return Jenkins.get().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
                     .getInstallations();
             }
 
             @Override
             public void setInstallations(SbtInstallation... installations) {
-                Jenkins.getInstance().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
+                Jenkins.get().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
                     .setInstallations(installations);
             }
 
@@ -427,7 +442,7 @@ public class SbtPluginBuilder extends Builder {
              */
             public FormValidation doCheckHome(@QueryParameter File value) {
 
-                if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     return FormValidation.ok();
                 }
 
@@ -469,4 +484,3 @@ public class SbtPluginBuilder extends Builder {
         }
     }
 }
-

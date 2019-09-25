@@ -1,8 +1,9 @@
 <!--
   This view is used to render the plugin list page.
 
-  Since we don't really have anything dynamic here, let's just use static HTML. 
+  Since we don't really have anything dynamic here, let's just use static HTML.
 -->
+<?jelly escape-by-default='true'?>
 <div>
-  This plugin allows running SBT empowered scala projects in Hudson. 
+  This plugin allows running SBT empowered scala projects in Hudson.
 </div>
