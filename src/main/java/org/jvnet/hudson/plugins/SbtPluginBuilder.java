@@ -413,6 +413,12 @@ public class SbtPluginBuilder extends Builder {
             return sbtArguments;
         }
 
+        @Override
+        public final void buildEnvVars(final EnvVars env) {
+            final String home = super.getHome();
+            env.put("PATH+SBT", home + "/bin");
+        }
+
         @Extension
         public static class DescriptorImpl extends ToolDescriptor<SbtInstallation> {
 
