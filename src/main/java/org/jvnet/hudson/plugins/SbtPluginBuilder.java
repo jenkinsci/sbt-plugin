@@ -119,6 +119,7 @@ public class SbtPluginBuilder extends Builder {
                 listener);
             String[] cmds = cmdLine.toCommandArray();
             env = build.getEnvironment(listener);
+            env.overrideAll(build.getBuildVariables());
 
             if (subdirPath != null && subdirPath.length() > 0) {
                 String subSubdirPath = new StrSubstitutor(env).replace(subdirPath);
