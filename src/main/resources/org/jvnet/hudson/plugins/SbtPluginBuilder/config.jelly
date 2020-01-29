@@ -7,9 +7,16 @@
   
   <f:entry title="sbt launcher">
   	<select class="setting-input" name="jar.name" description="Select configured sbt launcher">
+        <j:set var="foundinst" value="0"/>
         <j:forEach var="inst" items="${descriptor.installations}">
           <f:option selected="${inst.name.equals(instance.name)}">${inst.name}</f:option>
+          <j:if test="${inst.name.equals(instance.name)}">
+            <j:set var="foundinst" value="1"/>
+          </j:if>
         </j:forEach>
+        <j:if test="${foundinst != 1}">
+          <f:option selected="true" value="${inst.name}">${inst.name} (Not Available!)</f:option>
+        </j:if>
       </select>
   </f:entry>
 
