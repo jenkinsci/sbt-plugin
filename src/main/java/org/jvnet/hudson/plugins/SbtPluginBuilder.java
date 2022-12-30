@@ -29,6 +29,7 @@ import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
@@ -45,15 +46,11 @@ import java.util.regex.Pattern;
 
 /**
  * sbt plugin {@link Builder}.
- * <p/>
- * <p/>
  * When the user configures the project and enables this builder,
  * {@link DescriptorImpl#newInstance(StaplerRequest)} is invoked and a new
  * {@link SbtPluginBuilder} is created. The created instance is persisted to the
  * project configuration XML by using XStream, so this allows you to use
  * instance fields (like {@link #name}) to remember the configuration.
- * <p/>
- * <p/>
  * When a build is performed, the
  * {@link #perform(AbstractBuild, Launcher, BuildListener)} method will be
  * invoked.
@@ -296,9 +293,7 @@ public class SbtPluginBuilder extends Builder {
     /**
      * Descriptor for {@link SbtPluginBuilder}. Used as a singleton. The class
      * is marked as public so that it can be accessed from views.
-     * <p/>
-     * <p/>
-     * See <tt>SbtPluginBuilder/*.jelly</tt> for the actual HTML fragment for
+     * See {@code SbtPluginBuilder/*.jelly} for the actual HTML fragment for
      * the configuration screen.
      */
     @Extension
@@ -396,13 +391,13 @@ public class SbtPluginBuilder extends Builder {
         public static class DescriptorImpl extends ToolDescriptor<SbtInstallation> {
 
             public SbtInstallation[] getInstallations() {
-                return Jenkins.getInstance().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
+                return Jenkins.get().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
                     .getInstallations();
             }
 
             @Override
             public void setInstallations(SbtInstallation... installations) {
-                Jenkins.getInstance().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
+                Jenkins.get().getDescriptorByType(SbtPluginBuilder.DescriptorImpl.class)
                     .setInstallations(installations);
             }
 
@@ -421,7 +416,7 @@ public class SbtPluginBuilder extends Builder {
              */
             public FormValidation doCheckHome(@QueryParameter File value) {
 
-                if (!Jenkins.getInstance().hasPermission(Jenkins.ADMINISTER)) {
+                if (!Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
                     return FormValidation.ok();
                 }
 
@@ -443,6 +438,11 @@ public class SbtPluginBuilder extends Builder {
                 if(sbtLaunchJarFile.exists())
                     return sbtLaunchJarFile.getPath();
                 return getHome();
+            }
+
+            @Override
+            public void checkRoles(RoleChecker checker) throws SecurityException {
+
             }
         }
     }

@@ -11,8 +11,8 @@ Issues
 ------
 Please report issues at the project's [Jira], using the component `sbt-plugin` in the issue.
 
-[Scala]: http://www.scala-lang.org/
-[Jenkins]: http://jenkins-ci.org/
+[Scala]: https://www.scala-lang.org/
+[Jenkins]: https://www.jenkins.io/
 [sbt]: https://www.scala-sbt.org/
-[wiki]: http://wiki.jenkins-ci.org/display/JENKINS/sbt+plugin
-[Jira]: https://issues.jenkins-ci.org/issues/?jql=project+%3D+JENKINS+AND+component+%3D+sbt-plugin
+[wiki]: https://plugins.jenkins.io/sbt/
+[Jira]: https://issues.jenkins.io/issues/?jql=project+%3D+JENKINS+AND+component+%3D+sbt-plugin
