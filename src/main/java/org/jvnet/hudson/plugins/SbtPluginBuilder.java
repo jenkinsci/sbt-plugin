@@ -439,6 +439,11 @@ public class SbtPluginBuilder extends Builder {
                     return sbtLaunchJarFile.getPath();
                 return getHome();
             }
+
+            @Override
+            public void checkRoles(RoleChecker checker) throws SecurityException {
+
+            }
         }
     }
 
