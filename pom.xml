@@ -3,24 +3,16 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>1.431</version>
-    <!--<relativePath>../pom.xml</relativePath>-->
+    <version>4.53</version>
+    <relativePath />
   </parent>
 
   <artifactId>sbt</artifactId>
-  <version>1.6-SNAPSHOT</version>
+  <version>${changelist}</version>
   <packaging>hpi</packaging>
   <name>Jenkins sbt plugin</name>
   <description>Build your scala project using sbt in Jenkins</description>
   <url>http://wiki.jenkins-ci.org/display/JENKINS/sbt+plugin</url>
-
-  <developers>
-    <developer>
-      <id>uzilan</id>
-      <name>Uzi Landsmann</name>
-      <email>uzi.landsmann@gmail.com</email>
-    </developer>
-  </developers>
   
   <licenses>
     <license>
@@ -31,11 +23,18 @@
   </licenses>
   
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/sbt-plugin.git</connection>
+    <connection>scm:git:https://github.com/jenkinsci/sbt-plugin.git</connection>
     <developerConnection>scm:git:git@github.com:jenkinsci/sbt-plugin.git</developerConnection>
     <url>https://github.com/jenkinsci/sbt-plugin</url>
-    <tag>HEAD</tag>
+    <tag>${scmTag}</tag>
   </scm>
+
+  <properties>
+    <changelist>999999-SNAPSHOT</changelist>
+    <jenkins.version>2.361.4</jenkins.version>
+    <!-- TODO fix violations -->
+    <spotbugs.threshold>High</spotbugs.threshold>
+  </properties>
   
   <repositories>
     <repository>
@@ -52,11 +51,11 @@
   </pluginRepositories>
 
   <dependencies>
-  	<dependency>
-  		<groupId>commons-lang</groupId>
-  		<artifactId>commons-lang</artifactId>
-  		<version>2.5</version>
-  	</dependency>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-lang-api</artifactId>
+      <version>2.6.0</version>
+    </dependency>
   </dependencies>
 
 </project>
