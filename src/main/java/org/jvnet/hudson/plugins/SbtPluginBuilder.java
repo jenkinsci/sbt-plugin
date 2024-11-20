@@ -29,6 +29,7 @@ import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.jenkinsci.Symbol;
 import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
@@ -357,7 +358,7 @@ public class SbtPluginBuilder extends Builder {
         }
 
         private static String launderHome(String home) {
-            if (home.endsWith("/") || home.endsWith("\\")) {
+            if (home != null && (home.endsWith("/") || home.endsWith("\\"))) {
                 // see https://issues.apache.org/bugzilla/show_bug.cgi?id=26947
                 // Ant doesn't like the trailing slash, especially on Windows
                 return home.substring(0, home.length() - 1);
@@ -383,11 +384,21 @@ public class SbtPluginBuilder extends Builder {
             return new SbtInstallation(getName(), translateFor(node, log), sbtArguments, getProperties().toList());
         }
 
+        @Override
+        public void buildEnvVars(EnvVars env) {
+            String home = getHome();
+            if (home == null) {
+                return;
+            }
+            // see EnvVars javadoc for why this adds PATH.
+            env.put("PATH+SBT", home + "/bin");
+        }
+
         public String getSbtArguments() {
             return sbtArguments;
         }
 
-        @Extension
+        @Extension @Symbol("sbt")
         public static class DescriptorImpl extends ToolDescriptor<SbtInstallation> {
 
             public SbtInstallation[] getInstallations() {
