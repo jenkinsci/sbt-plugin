@@ -1,7 +1,10 @@
 package org.jvnet.hudson.plugins;
 
+import static org.junit.Assume.assumeFalse;
+
 import java.util.List;
 
+import hudson.Functions;
 import hudson.model.Cause;
 import hudson.model.CauseAction;
 import hudson.model.DownloadService;
@@ -61,6 +64,8 @@ class SbtPluginBuilderTest {
 
     @Test
     public void testPipeline(JenkinsRule jenkinsRule) throws Exception {
+        assumeFalse(Functions.isWindows());
+
         DownloadService.Downloadable mvnDl =
                 DownloadService.Downloadable.get("org.jvnet.hudson.plugins.SbtPluginBuilder.SbtInstaller");
 
