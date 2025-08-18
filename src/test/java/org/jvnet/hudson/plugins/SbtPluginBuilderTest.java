@@ -1,6 +1,6 @@
 package org.jvnet.hudson.plugins;
 
-import static org.junit.Assume.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
 import java.util.List;
 
