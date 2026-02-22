@@ -12,7 +12,7 @@
   <packaging>hpi</packaging>
   <name>Jenkins sbt plugin</name>
   <description>Build your scala project using sbt in Jenkins</description>
-  <url>http://wiki.jenkins-ci.org/display/JENKINS/sbt+plugin</url>
+  <url>https://github.com/jenkinsci/sbt-plugin/</url>
   
   <licenses>
     <license>
