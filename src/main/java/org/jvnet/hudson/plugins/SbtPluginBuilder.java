@@ -28,8 +28,8 @@ import hudson.util.ArgumentListBuilder;
 import hudson.util.FormValidation;
 import jenkins.model.Jenkins;
 import net.sf.json.JSONObject;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringSubstitutor;
 import org.jenkinsci.Symbol;
 import org.jenkinsci.remoting.RoleChecker;
 import org.kohsuke.stapler.DataBoundConstructor;
@@ -121,7 +121,7 @@ public class SbtPluginBuilder extends Builder {
             env.overrideAll(build.getBuildVariables());
 
             if (subdirPath != null && subdirPath.length() > 0) {
-                String subSubdirPath = new StrSubstitutor(env).replace(subdirPath);
+                String subSubdirPath = new StringSubstitutor(env).replace(subdirPath);
                 workDir = new FilePath(workDir, subSubdirPath);
             }
 
@@ -227,7 +227,7 @@ public class SbtPluginBuilder extends Builder {
 
             args.add(launcherPath);
 
-            String subActions = new StrSubstitutor(env).replace(actions);
+            String subActions = new StringSubstitutor(env).replace(actions);
             for (String action : split(subActions)) {
                 args.add(action);
             }

@@ -38,6 +38,7 @@
     <!-- TODO fix violations -->
     <spotbugs.threshold>High</spotbugs.threshold>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
+    <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
   </properties>
   
   <repositories>
@@ -55,6 +56,10 @@
   </pluginRepositories>
 
   <dependencies>
+    <dependency>
+      <groupId>io.jenkins.plugins</groupId>
+      <artifactId>commons-text-api</artifactId>
+    </dependency>
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>commons-lang3-api</artifactId>
